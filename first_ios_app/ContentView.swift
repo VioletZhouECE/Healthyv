@@ -10,22 +10,44 @@ import SwiftUI
 struct Task : Identifiable {
     let id = UUID()
     let name : String
+    var completed: Bool = false
 }
 
 struct TaskRow : View {
-    let task: Task
+    @Binding var task: Task
     var body: some View {
         HStack {
-            Image(systemName: "square")
-            Text(task.name)
+            Button(action: {
+                if task.completed {
+                    task.completed = false
+                } else {
+                    task.completed = true
+                }
+            }) {
+                if task.completed {
+                    Image(systemName: "checkmark.square")
+                } else {
+                    Image(systemName: "square")
+                }
+            }
+            if task.completed {
+                Text(task.name)
+                    .foregroundColor(.gray)
+                    .strikethrough()
+            } else {
+                Text(task.name)
+            }
         }
     }
 }
 
-let medications = [Task(name: "Vemlidy")]
-let doctorNotes = ["Be nice to urself", "Sleep early", "Eat less"]
+//let medications = [Task(name: "Vemlidy")]
+//let doctorNotes = [Task(name:"Be nice to urself"), Task(name:"Sleep early"), Task(name:"Eat less")]
 
 struct ContentView: View {
+    @State private var medications = [Task(name: "Vemlidy")]
+    @State private var doctorNotes = [Task(name:"Be nice to urself"), Task(name:"Sleep early"), Task(name:"Eat less")]
+    
     var body: some View {
         HStack{
             VStack(alignment: .leading) {
@@ -37,8 +59,8 @@ struct ContentView: View {
                         .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
                         .font(.title)){
                     List{
-                        ForEach(medications, content: {
-                                    med in TaskRow(task: med)})
+                        ForEach(medications.indices){
+                            i in TaskRow(task: $medications[i])}
                     }
                 }
                 Section(header: HStack{
@@ -48,8 +70,8 @@ struct ContentView: View {
                 .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
                 .font(.title)){
                     List{
-                        ForEach(doctorNotes, id: \.self, content: {
-                                    name in Text(name)})
+                        ForEach(doctorNotes.indices){
+                            i in TaskRow(task: $doctorNotes[i])}
                     }
                 }
                 Spacer()
