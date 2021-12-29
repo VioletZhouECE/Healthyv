@@ -9,6 +9,11 @@ import SwiftUI
 
 @main
 struct first_ios_appApp: App {
+    init(){
+        setNotifications()
+        registerTimeIntervalNotif()
+        getPendingNotif()
+    }
     var body: some Scene {
         WindowGroup {
             ContentView()

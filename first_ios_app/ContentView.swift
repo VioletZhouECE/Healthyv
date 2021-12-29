@@ -7,10 +7,21 @@
 
 import SwiftUI
 
+//Notifications mechanism that works for Violet:
+//If user checked the checkbox for that day:
+//1. (optional) cancel the current UNCalendarNotificationTrigger (for that day)
+//2. remove the UNTimeIntervalNotificationTrigger (if exists)
+//When the notification fires off
+//register a UNTimeIntervalNotificationTrigger (id: userid-taskid)
+//At 22:30 (bedtime)
+//remove the UNTimeIntervalNotificationTrigger (if exists)
+
 struct Task : Identifiable {
     let id = UUID()
     let name : String
     var completed: Bool = false
+    //format: HH:mm
+    var time: String?
 }
 
 struct TaskRow : View {
@@ -37,6 +48,10 @@ struct TaskRow : View {
             } else {
                 Text(task.name)
             }
+            Spacer()
+            if task.time != nil {
+                Text(task.time!)
+            }
         }
     }
 }
@@ -45,7 +60,7 @@ struct TaskRow : View {
 //let doctorNotes = [Task(name:"Be nice to urself"), Task(name:"Sleep early"), Task(name:"Eat less")]
 
 struct ContentView: View {
-    @State private var medications = [Task(name: "Vemlidy")]
+    @State private var medications = [Task(name: "Vemlidy", time: "17:45")]
     @State private var doctorNotes = [Task(name:"Be nice to urself"), Task(name:"Sleep early"), Task(name:"Eat less")]
     
     var body: some View {
@@ -83,7 +98,14 @@ struct ContentView: View {
 }
 
 struct ContentView_Previews: PreviewProvider {
+    init(){
+        requestAuthorization()
+        registerTimeIntervalNotif()
+    }
     static var previews: some View {
-        ContentView()
+        Group {
+            ContentView()
+            ContentView()
+        }
     }
 }
