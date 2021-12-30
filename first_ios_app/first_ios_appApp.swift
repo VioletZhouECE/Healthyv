@@ -12,9 +12,9 @@ struct first_ios_appApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     init(){
-        setNotifications()
-        registerTimeIntervalNotif()
-        getPendingNotif()
+        NotificationManager.setNotifications()
+        NotificationManager.registerMedicationNotif()
+        //getPendingNotif()
     }
     var body: some Scene {
         WindowGroup {

@@ -31,8 +31,10 @@ struct TaskRow : View {
             Button(action: {
                 if task.completed {
                     task.completed = false
+                    //to-do: add the notification back
                 } else {
                     task.completed = true
+                    removeNotif()
                 }
             }) {
                 if task.completed {
@@ -95,13 +97,31 @@ struct ContentView: View {
             Spacer()
         }
     }
+    
+    //register once a medication entry is created
+    //TODO: remove hard-coded values
+    func registerMedicationNotif(){
+        //schedule daily reminder
+        var dateComponents = DateComponents()
+        dateComponents.calendar = Calendar.current
+        dateComponents.hour = 17
+        dateComponents.minute = 45
+        NotificationManager.registerCalendarNotif(title:"Medication Time", body:"Remember to take Vemlidy", dateComponents:dateComponents, identifier: "violet-vemlidy-calendar")
+        //schedule repeated notifications which are sent in the event where the task is not completed,
+        let timer = Timer(fireAt: Calendar.current.date(from: dateComponents)!, interval: 60*60*24, target: self, selector: #selector(self.checkTaskCompleted), userInfo: nil, repeats: true)
+        RunLoop.main.add(timer, forMode: .common)
+    }
+    
+    @objc func checkTaskCompleted(){
+        
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {
-    init(){
-        requestAuthorization()
-        registerTimeIntervalNotif()
-    }
+//    init(){
+//        requestAuthorization()
+//        registerTimeIntervalNotif()
+//    }
     static var previews: some View {
         Group {
             ContentView()
