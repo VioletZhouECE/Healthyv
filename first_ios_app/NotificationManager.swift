@@ -32,30 +32,7 @@ class NotificationManager {
             registerTimeIntervalNotification(title: task.name, body: "Remember to take " + task.name, timeInterval: 60*3, identifier: task.id.uuidString)
         }
     }
-
-//    static func registerCalendarNotif(title: String, body: String, dateComponents: DateComponents, identifier: String){
-//        let content = UNMutableNotificationContent()
-//        content.title = title
-//        content.body = body
-//        content.sound = UNNotificationSound.default
-//
-//        // Create the trigger as a repeating event.
-//        let trigger = UNCalendarNotificationTrigger(
-//                 dateMatching: dateComponents, repeats: true)
-//
-//        // Create the request
-//        let request = UNNotificationRequest(identifier: identifier,
-//                    content: content, trigger: trigger)
-//
-//        // Schedule the request with the system.
-//        let notificationCenter = UNUserNotificationCenter.current()
-//        notificationCenter.add(request) { (error) in
-//           if error != nil {
-//              // ignore the errors for now
-//           }
-//        }
-//    }
-
+    
     static func sendNotificationImmediately(title: String, body: String, identifier: String){
         let content = UNMutableNotificationContent()
         content.title = title

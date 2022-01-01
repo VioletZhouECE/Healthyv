@@ -71,16 +71,14 @@ struct TaskRow : View {
     }
 }
 
-//let medications = [Task(name: "Vemlidy")]
-//let doctorNotes = [Task(name:"Be nice to urself"), Task(name:"Sleep early"), Task(name:"Eat less")]
-
  struct ContentView: View {
     
-    @ObservedObject private var tasks = TaskContainer(medications: [Task(name: "Vemlidy", completed: false, time: "17:45")], doctorNotes: [Task(name:"Be nice to urself", completed: false), Task(name:"Sleep early", completed: false), Task(name:"Eat less", completed: false)])
+    @StateObject private var tasks = TaskContainer(medications: [Task(name: "Vemlidy", completed: false, time: "17:45")], doctorNotes: [Task(name:"Be nice to urself", completed: false), Task(name:"Sleep early", completed: false), Task(name:"Eat less", completed: false)])
 
     init(){
         //TODO: remove hard-coded initial notifications
         NotificationManager.removeAllPendingNotification()
+        //ignore the warning
         NotificationManager.registerMedicationNotification(task:tasks.medications[0])
     }
     
