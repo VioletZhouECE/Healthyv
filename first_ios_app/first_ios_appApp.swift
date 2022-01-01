@@ -13,8 +13,6 @@ struct first_ios_appApp: App {
     
     init(){
         NotificationManager.setNotifications()
-        NotificationManager.registerMedicationNotif()
-        //getPendingNotif()
     }
     var body: some Scene {
         WindowGroup {

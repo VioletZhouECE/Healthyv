@@ -9,20 +9,62 @@ import Foundation
 import SwiftUI
 
 class NotificationManager {
+    
+    //TODO: remove hard-coded values
+    static func registerMedicationNotification(task: Task){
+        print("registerMedicationNotification")
+        //schedule daily reminder
+        var dateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: Date())
+        dateComponents.hour = 17
+        dateComponents.minute = 45
+        // NotificationManager.registerCalendarNotif(title:"Medication Time", body:"Remember to take Vemlidy", dateComponents:dateComponents, identifier: "violet-vemlidy-calendar")
+        //schedule repeated notifications which are sent in the event where the task is not completed,
+        let timer = Timer(fireAt: Calendar(identifier: .gregorian).date(from: dateComponents)!, interval: 60*60*24, target: self, selector: #selector(runNotificationScheduler), userInfo: task, repeats: true)
+        RunLoop.main.add(timer, forMode: .common)
+    }
+    
+    @objc static func runNotificationScheduler(timer: Timer){
+        print("runNotificationScheduler")
+        //if the task is not completed, schedule notifications
+        let task = timer.userInfo as! Task
+        if task.completed == false {
+            sendNotificationImmediately(title: task.name, body: "Remember to take " + task.name, identifier: task.id.uuidString)
+            registerTimeIntervalNotification(title: task.name, body: "Remember to take " + task.name, timeInterval: 60*3, identifier: task.id.uuidString)
+        }
+    }
 
-    static func registerCalendarNotif(title: String, body: String, dateComponents: DateComponents, identifier: String){
+//    static func registerCalendarNotif(title: String, body: String, dateComponents: DateComponents, identifier: String){
+//        let content = UNMutableNotificationContent()
+//        content.title = title
+//        content.body = body
+//        content.sound = UNNotificationSound.default
+//
+//        // Create the trigger as a repeating event.
+//        let trigger = UNCalendarNotificationTrigger(
+//                 dateMatching: dateComponents, repeats: true)
+//
+//        // Create the request
+//        let request = UNNotificationRequest(identifier: identifier,
+//                    content: content, trigger: trigger)
+//
+//        // Schedule the request with the system.
+//        let notificationCenter = UNUserNotificationCenter.current()
+//        notificationCenter.add(request) { (error) in
+//           if error != nil {
+//              // ignore the errors for now
+//           }
+//        }
+//    }
+
+    static func sendNotificationImmediately(title: String, body: String, identifier: String){
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
         content.sound = UNNotificationSound.default
-           
-        // Create the trigger as a repeating event.
-        let trigger = UNCalendarNotificationTrigger(
-                 dateMatching: dateComponents, repeats: true)
         
         // Create the request
         let request = UNNotificationRequest(identifier: identifier,
-                    content: content, trigger: trigger)
+                    content: content, trigger: nil)
 
         // Schedule the request with the system.
         let notificationCenter = UNUserNotificationCenter.current()
@@ -33,8 +75,7 @@ class NotificationManager {
         }
     }
 
-
-    static func registerTimeIntervalNotif(title: String, body: String, timeInterval: Double, identifier: String){
+    static func registerTimeIntervalNotification(title: String, body: String, timeInterval: Double, identifier: String){
         
         let content = UNMutableNotificationContent()
         content.title = title
@@ -64,25 +105,22 @@ class NotificationManager {
         }
     }
 
-    static func getPendingNotif(){
+    static func getPendingNotifications(){
         UNUserNotificationCenter.current().getPendingNotificationRequests{
                    requests in
                     print(requests.count)
         }
     }
+    
+    static func removeAllPendingNotification(){
+        print("removeAllPendingNotification")
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+    }
 
-    static func removeNotif(){
-        //cancel the unsent calendar notification for that day
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["violet-vemlidy-calendar"])
-        //schedule for tomorrow
-        let midnight = Calendar.current.startOfDay(for: Date())
-        let fromDate = Calendar.current.date(byAdding: .day, value: 1, to: midnight)!
-        var dateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: fromDate)
-        dateComponents.calendar = Calendar.current
-        dateComponents.hour = 17
-        dateComponents.minute = 45
-        registerCalendarNotif(title:"Medication Time", body:"Remember to take Vemlidy", dateComponents:dateComponents, identifier: "violet-vemlidy-calendar")
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["violet-vemlidy-interval"])
+    static func removeNotification(task: Task){
+        print("removeNotification")
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [task.id.uuidString])
+        NotificationManager.getPendingNotifications()
     }
 
     static func setNotifications() {

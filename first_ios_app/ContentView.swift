@@ -7,34 +7,47 @@
 
 import SwiftUI
 
-//Notifications mechanism that works for Violet:
-//If user checked the checkbox for that day:
-//1. (optional) cancel the current UNCalendarNotificationTrigger (for that day)
-//2. remove the UNTimeIntervalNotificationTrigger (if exists)
-//When the notification fires off
-//register a UNTimeIntervalNotificationTrigger (id: userid-taskid)
-//At 22:30 (bedtime)
-//remove the UNTimeIntervalNotificationTrigger (if exists)
+//create a task, set a timer that fires at <time> everyday
+//schedule a UNIntervalNotification (fires off every 5 min)
 
-struct Task : Identifiable {
+class TaskContainer : ObservableObject {
+    @Published var medications = [Task]()
+    @Published var doctorNotes = [Task]()
+    
+    init(medications: [Task], doctorNotes: [Task]){
+        self.medications = medications
+        self.doctorNotes = doctorNotes
+    }
+}
+
+class Task: Identifiable, ObservableObject {
     let id = UUID()
     let name : String
-    var completed: Bool = false
+    @Published var completed: Bool = false
     //format: HH:mm
     var time: String?
+    
+    init(name: String, completed: Bool, time: String?=nil){
+        self.name = name
+        self.completed = completed
+        if let time = time {
+            self.time = time
+        }
+    }
 }
 
 struct TaskRow : View {
-    @Binding var task: Task
+    @ObservedObject var task: Task
+    
     var body: some View {
         HStack {
             Button(action: {
                 if task.completed {
                     task.completed = false
-                    //to-do: add the notification back
+                    //TODO: add notifications back
                 } else {
                     task.completed = true
-                    removeNotif()
+                    NotificationManager.removeNotification(task:task)
                 }
             }) {
                 if task.completed {
@@ -61,9 +74,15 @@ struct TaskRow : View {
 //let medications = [Task(name: "Vemlidy")]
 //let doctorNotes = [Task(name:"Be nice to urself"), Task(name:"Sleep early"), Task(name:"Eat less")]
 
-struct ContentView: View {
-    @State private var medications = [Task(name: "Vemlidy", time: "17:45")]
-    @State private var doctorNotes = [Task(name:"Be nice to urself"), Task(name:"Sleep early"), Task(name:"Eat less")]
+ struct ContentView: View {
+    
+    @ObservedObject private var tasks = TaskContainer(medications: [Task(name: "Vemlidy", completed: false, time: "17:45")], doctorNotes: [Task(name:"Be nice to urself", completed: false), Task(name:"Sleep early", completed: false), Task(name:"Eat less", completed: false)])
+
+    init(){
+        //TODO: remove hard-coded initial notifications
+        NotificationManager.removeAllPendingNotification()
+        NotificationManager.registerMedicationNotification(task:tasks.medications[0])
+    }
     
     var body: some View {
         HStack{
@@ -76,8 +95,8 @@ struct ContentView: View {
                         .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
                         .font(.title)){
                     List{
-                        ForEach(medications.indices){
-                            i in TaskRow(task: $medications[i])}
+                        ForEach(tasks.medications.indices){
+                            i in TaskRow(task: self.tasks.medications[i])}
                     }
                 }
                 Section(header: HStack{
@@ -87,8 +106,8 @@ struct ContentView: View {
                 .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
                 .font(.title)){
                     List{
-                        ForEach(doctorNotes.indices){
-                            i in TaskRow(task: $doctorNotes[i])}
+                        ForEach(tasks.doctorNotes.indices){
+                            i in TaskRow(task: tasks.doctorNotes[i])}
                     }
                 }
                 Spacer()
@@ -96,24 +115,6 @@ struct ContentView: View {
             .padding(.all)
             Spacer()
         }
-    }
-    
-    //register once a medication entry is created
-    //TODO: remove hard-coded values
-    func registerMedicationNotif(){
-        //schedule daily reminder
-        var dateComponents = DateComponents()
-        dateComponents.calendar = Calendar.current
-        dateComponents.hour = 17
-        dateComponents.minute = 45
-        NotificationManager.registerCalendarNotif(title:"Medication Time", body:"Remember to take Vemlidy", dateComponents:dateComponents, identifier: "violet-vemlidy-calendar")
-        //schedule repeated notifications which are sent in the event where the task is not completed,
-        let timer = Timer(fireAt: Calendar.current.date(from: dateComponents)!, interval: 60*60*24, target: self, selector: #selector(self.checkTaskCompleted), userInfo: nil, repeats: true)
-        RunLoop.main.add(timer, forMode: .common)
-    }
-    
-    @objc func checkTaskCompleted(){
-        
     }
 }
 
@@ -124,7 +125,6 @@ struct ContentView_Previews: PreviewProvider {
 //    }
     static var previews: some View {
         Group {
-            ContentView()
             ContentView()
         }
     }
