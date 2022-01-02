@@ -71,6 +71,21 @@ struct TaskRow : View {
     }
 }
 
+struct AddTaskView : View {
+    var body: some View {
+        HStack{
+            VStack(alignment: .leading){
+                Section(header: Text("name")){
+                    Text("some task")
+                }
+                Spacer()
+            }
+            .padding(.all)
+            Spacer()
+        }
+    }
+}
+
  struct ContentView: View {
     
     @StateObject private var tasks = TaskContainer(medications: [Task(name: "Vemlidy", completed: false, time: "17:45")], doctorNotes: [Task(name:"Be nice to urself", completed: false), Task(name:"Sleep early", completed: false), Task(name:"Eat less", completed: false)])
@@ -83,44 +98,48 @@ struct TaskRow : View {
     }
     
     var body: some View {
-        HStack{
-            VStack(alignment: .leading) {
-                Section(header:
-                        HStack{
-                            Image(systemName: "note.text")
-                            Text("Medication")
+        NavigationView {
+            HStack{
+                VStack(alignment: .leading) {
+                    Section(header:
+                            HStack{
+                                Image(systemName: "note.text")
+                                Text("Medication")
+                            }
+                            .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
+                            .font(.title)){
+                        List{
+                            ForEach(tasks.medications.indices){
+                                i in TaskRow(task: self.tasks.medications[i])}
                         }
-                        .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
-                        .font(.title)){
-                    List{
-                        ForEach(tasks.medications.indices){
-                            i in TaskRow(task: self.tasks.medications[i])}
                     }
-                }
-                Section(header: HStack{
-                    Image(systemName: "pencil.circle")
-                    Text("Doctor Notes")
-                }
-                .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
-                .font(.title)){
-                    List{
-                        ForEach(tasks.doctorNotes.indices){
-                            i in TaskRow(task: tasks.doctorNotes[i])}
+                    Section(header: HStack{
+                        Image(systemName: "pencil.circle")
+                        Text("Doctor Notes")
                     }
+                    .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
+                    .font(.title)){
+                        List{
+                            ForEach(tasks.doctorNotes.indices){
+                                i in TaskRow(task: tasks.doctorNotes[i])}
+                        }
+                    }
+                    Spacer()
                 }
+                .padding(.all)
                 Spacer()
-            }
-            .padding(.all)
-            Spacer()
+            }.navigationBarTitle(Text(""), displayMode: .inline)
+            .navigationBarItems(trailing: NavigationLink("Add", destination:AddTaskView()))
         }
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
-//    init(){
-//        requestAuthorization()
-//        registerTimeIntervalNotif()
-//    }
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
+    init(){
+        NotificationManager.setNotifications()
+    }
     static var previews: some View {
         Group {
             ContentView()
