@@ -72,16 +72,66 @@ struct TaskRow : View {
 }
 
 struct AddTaskView : View {
+    @State private var taskName = ""
+    @State private var time = Date()
+    @State private var clicked = false
+    
     var body: some View {
         HStack{
             VStack(alignment: .leading){
-                Section(header: Text("name")){
-                    Text("some task")
+                Group{
+                    VStack{
+                        HStack{
+                            Spacer()
+                            Text("Add a Medication")
+                                .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
+                                .font(.title)
+                            Spacer()
+                        }
+                        Text("")
+                        Text("")
+                    }
+                    VStack(alignment: .leading) {
+                        Text("Medication Name")
+                            .font(.callout)
+                            .bold()
+                        TextField("Medication A", text: $taskName)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                    }
+                    Text("")
+                    Text("")
+                    VStack(alignment: .leading) {
+                        Text("Reminder Time")
+                            .font(.callout)
+                            .bold()
+                        DatePicker("Repeat everyday at", selection: $time, displayedComponents: .hourAndMinute)
+                    }
+                    Text("")
+                    Text("")
+                    HStack{
+                        Spacer()
+                        Button(action: {
+                            if self.clicked == false {
+                                self.clicked = true
+                            }
+                        }){
+                            if self.clicked == false {
+                                Image(systemName: "checkmark.rectangle")
+                                .resizable()
+                                .frame(width: 60, height: 40)
+                            } else {
+                                Image(systemName: "checkmark.rectangle.fill")
+                                .resizable()
+                                .frame(width: 60, height: 40)
+                            }
+                        }
+                        Spacer()
+                    }
+                    Spacer()
                 }
+                .padding(.all)
                 Spacer()
             }
-            .padding(.all)
-            Spacer()
         }
     }
 }
