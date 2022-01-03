@@ -25,9 +25,9 @@ class Task: Identifiable, ObservableObject {
     let name : String
     @Published var completed: Bool = false
     //format: HH:mm
-    var time: String?
+    var time: Date?
     
-    init(name: String, completed: Bool, time: String?=nil){
+    init(name: String, completed: Bool, time: Date?=nil){
         self.name = name
         self.completed = completed
         if let time = time {
@@ -38,6 +38,13 @@ class Task: Identifiable, ObservableObject {
 
 struct TaskRow : View {
     @ObservedObject var task: Task
+    var time: String {
+            get {
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "HH:mm"
+                return dateFormatter.string(from: task.time!)
+            }
+    }
     
     var body: some View {
         HStack {
@@ -65,7 +72,7 @@ struct TaskRow : View {
             }
             Spacer()
             if task.time != nil {
-                Text(task.time!)
+                Text(time)
             }
         }
     }
@@ -73,6 +80,7 @@ struct TaskRow : View {
 
 struct AddTaskView : View {
     @Binding var showAddAMedication : Bool
+    @ObservedObject var tasks: TaskContainer
     @State private var taskName = ""
     @State private var time = Date()
     @State private var clicked = false
@@ -110,11 +118,9 @@ struct AddTaskView : View {
                         Spacer()
                         Button(action: {
                             if self.clicked == false {
+                                addMedication()
                                 self.clicked = true
-                                //sleep for 1s
-                                
                                 showAddAMedication = false
-                                print(showAddAMedication)
                             }
                         }){
                             if self.clicked == false {
@@ -136,19 +142,18 @@ struct AddTaskView : View {
             }
         }
     }
+    
+    func addMedication(){
+        let newTask = Task(name: taskName, completed: false, time: time)
+        tasks.medications.append(newTask)
+        NotificationManager.registerMedicationNotification(task: newTask)
+    }
 }
 
  struct ContentView: View {
     
-    @StateObject private var tasks = TaskContainer(medications: [Task(name: "Vemlidy", completed: false, time: "17:45")], doctorNotes: [Task(name:"Be nice to urself", completed: false), Task(name:"Sleep early", completed: false), Task(name:"Eat less", completed: false)])
+    @StateObject private var tasks = TaskContainer(medications: [Task(name: "Vemlidy", completed: false)], doctorNotes: [Task(name:"Be nice to urself", completed: false), Task(name:"Sleep early", completed: false), Task(name:"Eat less", completed: false)])
     @State private var showAddAMedication = false
-
-    init(){
-        //TODO: remove hard-coded initial notifications
-        NotificationManager.removeAllPendingNotification()
-        //ignore the warning
-        NotificationManager.registerMedicationNotification(task:tasks.medications[0])
-    }
     
     var body: some View {
             HStack{
@@ -167,13 +172,14 @@ struct AddTaskView : View {
                                 }){
                                     Image(systemName: "plus")
                                 }.popover(isPresented: $showAddAMedication) {
-                                    AddTaskView(showAddAMedication: $showAddAMedication)
+                                    AddTaskView(showAddAMedication: $showAddAMedication, tasks: tasks)
                                 }
                             })
                             {
                             List{
-                                ForEach(tasks.medications.indices){
-                                    i in TaskRow(task: self.tasks.medications[i])}
+                                ForEach(self.tasks.medications){
+                                    medication in TaskRow(task:medication)
+                                }
                             }
                         }
                     Section(header: HStack{
@@ -183,8 +189,9 @@ struct AddTaskView : View {
                     .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
                     .font(.title)){
                         List{
-                            ForEach(tasks.doctorNotes.indices){
-                                i in TaskRow(task: tasks.doctorNotes[i])}
+                            ForEach(self.tasks.doctorNotes){
+                                doctorNote in TaskRow(task:doctorNote)
+                            }
                         }
                     }
                     Spacer()

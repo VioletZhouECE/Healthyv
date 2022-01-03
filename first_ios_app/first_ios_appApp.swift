@@ -12,6 +12,7 @@ struct first_ios_appApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     init(){
+        NotificationManager.removeAllPendingNotification()
         NotificationManager.setNotifications()
     }
     var body: some Scene {
