@@ -72,6 +72,7 @@ struct TaskRow : View {
 }
 
 struct AddTaskView : View {
+    @Binding var showAddAMedication : Bool
     @State private var taskName = ""
     @State private var time = Date()
     @State private var clicked = false
@@ -80,17 +81,14 @@ struct AddTaskView : View {
         HStack{
             VStack(alignment: .leading){
                 Group{
-                    VStack{
-                        HStack{
-                            Spacer()
-                            Text("Add a Medication")
-                                .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
-                                .font(.title)
-                            Spacer()
-                        }
-                        Text("")
-                        Text("")
+                    HStack{
+                        Spacer()
+                        Text("Add a Medication")
+                            .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
+                            .font(.title)
+                        Spacer()
                     }
+                    Text("")
                     VStack(alignment: .leading) {
                         Text("Medication Name")
                             .font(.callout)
@@ -113,6 +111,10 @@ struct AddTaskView : View {
                         Button(action: {
                             if self.clicked == false {
                                 self.clicked = true
+                                //sleep for 1s
+                                
+                                showAddAMedication = false
+                                print(showAddAMedication)
                             }
                         }){
                             if self.clicked == false {
@@ -139,6 +141,7 @@ struct AddTaskView : View {
  struct ContentView: View {
     
     @StateObject private var tasks = TaskContainer(medications: [Task(name: "Vemlidy", completed: false, time: "17:45")], doctorNotes: [Task(name:"Be nice to urself", completed: false), Task(name:"Sleep early", completed: false), Task(name:"Eat less", completed: false)])
+    @State private var showAddAMedication = false
 
     init(){
         //TODO: remove hard-coded initial notifications
@@ -148,21 +151,31 @@ struct AddTaskView : View {
     }
     
     var body: some View {
-        NavigationView {
             HStack{
                 VStack(alignment: .leading) {
                     Section(header:
                             HStack{
-                                Image(systemName: "note.text")
-                                Text("Medication")
+                                HStack{
+                                    Image(systemName: "note.text")
+                                    Text("Medication")
+                                }
+                                .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
+                                .font(.title)
+                                Spacer()
+                                Button(action:{
+                                    self.showAddAMedication = true
+                                }){
+                                    Image(systemName: "plus")
+                                }.popover(isPresented: $showAddAMedication) {
+                                    AddTaskView(showAddAMedication: $showAddAMedication)
+                                }
+                            })
+                            {
+                            List{
+                                ForEach(tasks.medications.indices){
+                                    i in TaskRow(task: self.tasks.medications[i])}
                             }
-                            .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
-                            .font(.title)){
-                        List{
-                            ForEach(tasks.medications.indices){
-                                i in TaskRow(task: self.tasks.medications[i])}
                         }
-                    }
                     Section(header: HStack{
                         Image(systemName: "pencil.circle")
                         Text("Doctor Notes")
@@ -178,9 +191,7 @@ struct AddTaskView : View {
                 }
                 .padding(.all)
                 Spacer()
-            }.navigationBarTitle(Text(""), displayMode: .inline)
-            .navigationBarItems(trailing: NavigationLink("Add", destination:AddTaskView()))
-        }
+            }
     }
 }
 
