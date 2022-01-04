@@ -16,7 +16,6 @@ class NotificationManager {
         var dateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: Date())
         dateComponents.hour = Calendar.current.component(.hour, from: task.time!)
         dateComponents.minute = Calendar.current.component(.minute, from: task.time!)
-        // NotificationManager.registerCalendarNotif(title:"Medication Time", body:"Remember to take Vemlidy", dateComponents:dateComponents, identifier: "violet-vemlidy-calendar")
         //schedule repeated notifications which are sent in the event where the task is not completed,
         let timer = Timer(fireAt: Calendar(identifier: .gregorian).date(from: dateComponents)!, interval: 60*60*24, target: self, selector: #selector(runNotificationScheduler), userInfo: task, repeats: true)
         RunLoop.main.add(timer, forMode: .common)
@@ -27,8 +26,8 @@ class NotificationManager {
         //if the task is not completed, schedule notifications
         let task = timer.userInfo as! Task
         if task.completed == false {
-            sendNotificationImmediately(title: task.name, body: "Remember to take " + task.name, identifier: task.id.uuidString)
-            registerTimeIntervalNotification(title: task.name, body: "Remember to take " + task.name, timeInterval: 60*3, identifier: task.id.uuidString)
+            sendNotificationImmediately(title: task.name, body: task.body, identifier: task.id.uuidString)
+            registerTimeIntervalNotification(title: task.name, body: task.body, timeInterval: 60*3, identifier: task.id.uuidString)
         }
     }
     
