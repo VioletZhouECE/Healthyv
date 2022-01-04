@@ -9,8 +9,8 @@ import Foundation
 import SwiftUI
 
 struct AddMedicationView : View {
-    @Binding var showAddMedication : Bool
-    @ObservedObject var tasks: TaskContainer
+    @EnvironmentObject var tasks: TaskContainer
+    @EnvironmentObject var displayed : DisplayedView
     @State private var taskName = ""
     @State private var time = Date()
     @State private var clicked = false
@@ -50,7 +50,7 @@ struct AddMedicationView : View {
                             if self.clicked == false {
                                 addMedication()
                                 self.clicked = true
-                                showAddMedication = false
+                                displayed.showAddMedication = false
                             }
                         }){
                             if self.clicked == false {

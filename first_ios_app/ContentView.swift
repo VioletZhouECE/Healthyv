@@ -10,6 +10,11 @@ import SwiftUI
 //create a task, set a timer that fires at <time> everyday
 //schedule a UNIntervalNotification (fires off every 5 min)
 
+class DisplayedView : ObservableObject {
+    @Published var showAddMedication = false
+    @Published var showAddReminder = false
+}
+
 class TaskContainer : ObservableObject {
     @Published var medications = [Task]()
     @Published var reminders = [Task]()
@@ -22,7 +27,7 @@ class TaskContainer : ObservableObject {
 
 class Task: Identifiable, ObservableObject {
     let id = UUID()
-    let name : String
+    @Published var name : String
     let isMedication: Bool
     @Published var completed: Bool = false
     //format: HH:mm
@@ -49,6 +54,8 @@ class Task: Identifiable, ObservableObject {
 }
 
 struct TaskRow : View {
+    @EnvironmentObject var displayed: DisplayedView
+    @Environment(\.editMode) var editMode
     @ObservedObject var task: Task
     var time: String {
             get {
@@ -75,6 +82,9 @@ struct TaskRow : View {
                     Image(systemName: "square")
                 }
             }
+            if editMode!.wrappedValue.isEditing {
+            TextField(task.name, text: $task.name)
+          } else {
             if task.completed {
                 Text(task.name)
                     .foregroundColor(.gray)
@@ -82,6 +92,7 @@ struct TaskRow : View {
             } else {
                 Text(task.name)
             }
+          }
             Spacer()
             if task.time != nil {
                 Text(time)
@@ -93,12 +104,16 @@ struct TaskRow : View {
  struct ContentView: View {
     
     @StateObject private var tasks = TaskContainer(medications: [], reminders: [])
-    @State private var showAddMedication = false
-    @State private var showAddReminder = false
+    @StateObject private var displayed = DisplayedView()
     
     var body: some View {
             HStack{
                 VStack(alignment: .leading) {
+                    HStack{
+                        Spacer()
+                        EditButton()
+                    }
+                    Text("")
                     Section(header:
                             HStack{
                                 HStack{
@@ -109,11 +124,11 @@ struct TaskRow : View {
                                 .font(.title)
                                 Spacer()
                                 Button(action:{
-                                    self.showAddMedication = true
+                                    self.displayed.showAddMedication = true
                                 }){
                                     Image(systemName: "plus")
-                                }.popover(isPresented: $showAddMedication) {
-                                    AddMedicationView(showAddMedication: $showAddMedication, tasks: tasks)
+                                }.popover(isPresented: $displayed.showAddMedication) {
+                                    AddMedicationView()
                                 }
                             })
                             {
@@ -121,6 +136,7 @@ struct TaskRow : View {
                                 ForEach(self.tasks.medications){
                                     medication in TaskRow(task:medication)
                                 }
+                                .onDelete(perform: deleteMedication)
                             }
                         }
                     Section(header:
@@ -133,24 +149,44 @@ struct TaskRow : View {
                             .font(.title)
                             Spacer()
                             Button(action:{
-                                self.showAddReminder = true
+                                self.displayed.showAddReminder = true
                             }){
                                 Image(systemName: "plus")
-                            }.popover(isPresented: $showAddReminder) {
-                                AddReminderView(showAddReminder: $showAddReminder, tasks: tasks)
+                            }.popover(isPresented: $displayed.showAddReminder) {
+                                AddReminderView()
                             }
                         }){
                         List{
                             ForEach(self.tasks.reminders){
                                 reminder in TaskRow(task:reminder)
                             }
+                            .onDelete(perform: deleteReminder)
                         }
                     }
                     Spacer()
                 }
                 .padding(.all)
                 Spacer()
-            }
+            }.environmentObject(tasks)
+            .environmentObject(displayed)
+    }
+    
+    func deleteMedication(at offsets: IndexSet){
+        //remove notifications
+        let idxArray = Array(offsets)
+        idxArray.forEach {idx in
+            NotificationManager.removeNotification(task: self.tasks.medications[idx])
+        }
+        self.tasks.medications.remove(atOffsets: offsets)
+    }
+    
+    func deleteReminder(at offsets: IndexSet){
+        //remove notifications
+        let idxArray = Array(offsets)
+        idxArray.forEach {idx in
+            NotificationManager.removeNotification(task: self.tasks.reminders[idx])
+        }
+        self.tasks.reminders.remove(atOffsets: offsets)
     }
 }
 

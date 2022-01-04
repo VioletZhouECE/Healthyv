@@ -9,8 +9,8 @@ import Foundation
 import SwiftUI
 
 struct AddReminderView : View {
-    @Binding var showAddReminder : Bool
-    @ObservedObject var tasks: TaskContainer
+    @EnvironmentObject var tasks: TaskContainer
+    @EnvironmentObject var displayed : DisplayedView
     @State private var taskName = ""
     @State private var time = Date()
     @State private var clicked = false
@@ -50,7 +50,7 @@ struct AddReminderView : View {
                             if self.clicked == false {
                                 addReminder()
                                 self.clicked = true
-                                showAddReminder = false
+                                displayed.showAddReminder = false
                             }
                         }){
                             if self.clicked == false {
