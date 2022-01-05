@@ -95,7 +95,12 @@ struct TaskRow : View {
           }
             Spacer()
             if task.time != nil {
-                Text(time)
+                if editMode!.wrappedValue.isEditing {
+                    DatePicker("", selection: Binding<Date>(get: {task.time ?? Date()}, set: {task.time = $0}), displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                } else {
+                    Text(time)
+                }
             }
         }
     }
