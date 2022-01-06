@@ -27,30 +27,11 @@ class TaskContainer : ObservableObject {
 
 class Task: Identifiable, ObservableObject, Equatable {
     let id = UUID()
-    @Published var name : String {
-        didSet {
-            print("set name")
-            NotificationManager.rescheduleNotification(task: self, firesToday: true)
-        }
-    }
+    @Published var name : String
     let isMedication: Bool
-    @Published var completed: Bool = false {
-        didSet {
-            print("set completed")
-            if completed == false {
-                NotificationManager.rescheduleNotification(task: self, firesToday: true)
-            } else {
-                NotificationManager.rescheduleNotification(task: self, firesToday: false)
-            }
-        }
-    }
+    @Published var completed: Bool = false
     //format: HH:mm
-    var time: Date? {
-        didSet {
-            print("set time")
-            NotificationManager.rescheduleNotification(task: self, firesToday: true)
-        }
-    }
+    var time: Date?
     //time string
     var timeString: String {
             get {
@@ -97,7 +78,11 @@ struct TaskRow : View {
     var body: some View {
         HStack {
             Button(action: {
-                task.completed.toggle()
+                if task.completed {
+                    NotificationManager.rescheduleNotification(task: task, firesToday: false)
+                } else {
+                    NotificationManager.rescheduleNotification(task: task, firesToday: true)
+                }
             }) {
                 if task.completed {
                     Image(systemName: "checkmark.square")
@@ -125,7 +110,14 @@ struct TaskRow : View {
                     Text(task.timeString)
                 }
             }
-        }
+        //TODO: only reschedule notifications if sth has changed
+        //How to detect the change && perform action when exiting the edit mode
+        }.onChange(of: editMode!.wrappedValue, perform: {
+            value in
+            if value.isEditing == false {
+                NotificationManager.rescheduleNotification(task: task, firesToday: true)
+            }
+        })
     }
 }
 
