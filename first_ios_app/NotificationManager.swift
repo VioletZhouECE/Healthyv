@@ -10,19 +10,38 @@ import SwiftUI
 
 class NotificationManager {
     
-    static func registerMedicationNotification(task: Task){
-        print("registerMedicationNotification")
-        //schedule daily reminder
+    static func rescheduleNotification(task: Task, firesToday: Bool){
+        if let timer = task.timer {
+            print("reschedule notification for " + task.id.uuidString)
+            unregisterNotification(task: task)
+            registerNotification(task: task, firesToday: firesToday)
+        }
+    }
+
+    //if firesToday == true, firesAt : today, otherwise firesAt : tomorrow
+    static func registerNotification(task: Task, firesToday: Bool){
         var dateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: Date())
         dateComponents.hour = Calendar.current.component(.hour, from: task.time!)
         dateComponents.minute = Calendar.current.component(.minute, from: task.time!)
-        //schedule repeated notifications which are sent in the event where the task is not completed,
-        let timer = Timer(fireAt: Calendar(identifier: .gregorian).date(from: dateComponents)!, interval: 60*60*24, target: self, selector: #selector(runNotificationScheduler), userInfo: task, repeats: true)
+        var firesAtdate = Calendar(identifier: .gregorian).date(from: dateComponents)!
+        if firesToday == false {
+            var oneDay = DateComponents()
+            oneDay.day = 1
+            firesAtdate = Calendar.current.date(byAdding: oneDay, to: firesAtdate)!
+        }
+        let timer = Timer(fireAt: firesAtdate, interval: 60*60*24, target: self, selector: #selector(runNotificationScheduler), userInfo: task, repeats: true)
         RunLoop.main.add(timer, forMode: .common)
+        //side effect: update the timer associated with the task
+        task.timer = timer
     }
     
-    @objc static func runNotificationScheduler(timer: Timer){
-        print("runNotificationScheduler")
+    static func unregisterNotification(task: Task){
+        task.timer!.invalidate()
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [task.id.uuidString])
+    }
+    
+    @objc static private func runNotificationScheduler(timer: Timer){
+        print("run notification scheduler")
         //if the task is not completed, schedule notifications
         let task = timer.userInfo as! Task
         if task.completed == false {
@@ -31,7 +50,7 @@ class NotificationManager {
         }
     }
     
-    static func sendNotificationImmediately(title: String, body: String, identifier: String){
+    static private func sendNotificationImmediately(title: String, body: String, identifier: String){
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
@@ -50,8 +69,7 @@ class NotificationManager {
         }
     }
 
-    static func registerTimeIntervalNotification(title: String, body: String, timeInterval: Double, identifier: String){
-        
+    static private func registerTimeIntervalNotification(title: String, body: String, timeInterval: Double, identifier: String){
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
@@ -88,14 +106,8 @@ class NotificationManager {
     }
     
     static func removeAllPendingNotification(){
-        print("removeAllPendingNotification")
+        print("remove all pending notifications")
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-    }
-
-    static func removeNotification(task: Task){
-        print("removeNotification")
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [task.id.uuidString])
-        NotificationManager.getPendingNotifications()
     }
 
     static func setNotifications() {

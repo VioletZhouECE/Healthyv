@@ -76,6 +76,6 @@ struct AddMedicationView : View {
     func addMedication(){
         let newTask = Task(name: taskName, isMedication: true, completed: false, time: time)
         tasks.medications.append(newTask)
-        NotificationManager.registerMedicationNotification(task: newTask)
+        NotificationManager.registerNotification(task: newTask, firesToday: true)
     }
 }

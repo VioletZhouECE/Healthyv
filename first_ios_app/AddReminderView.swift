@@ -76,7 +76,7 @@ struct AddReminderView : View {
     func addReminder(){
         let newTask = Task(name: taskName, isMedication: false, completed: false, time: time)
         tasks.reminders.append(newTask)
-        NotificationManager.registerMedicationNotification(task: newTask)
+        NotificationManager.registerNotification(task: newTask, firesToday: true)
     }
 }
 
