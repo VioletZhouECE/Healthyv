@@ -31,20 +31,17 @@ class Task: Identifiable, ObservableObject, Equatable {
     let isMedication: Bool
     @Published var completed: Bool = false
     //format: HH:mm
-    var time: Date?
+    var time: Date
     //time string
     var timeString: String {
             get {
-                if time == nil {
-                    return ""
-                }
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "HH:mm"
-                return dateFormatter.string(from: time!)
+                return dateFormatter.string(from: time)
             }
     }
     //timer that schedules notifications
-    var timer: Timer?
+    var timer: Timer
     //reminder body
     var body: String {
         get {
@@ -56,13 +53,12 @@ class Task: Identifiable, ObservableObject, Equatable {
         }
     }
     
-    init(name: String, isMedication: Bool, completed: Bool, time: Date?=nil){
+    init(name: String, isMedication: Bool, completed: Bool, time: Date){
         self.name = name
         self.isMedication = isMedication
         self.completed = completed
-        if let time = time {
-            self.time = time
-        }
+        self.time = time
+        self.timer = Timer()
     }
     
     static func == (lhs: Task, rhs: Task) -> Bool {
@@ -78,6 +74,7 @@ struct TaskRow : View {
     var body: some View {
         HStack {
             Button(action: {
+                task.completed.toggle()
                 if task.completed {
                     NotificationManager.rescheduleNotification(task: task, firesToday: false)
                 } else {
@@ -102,13 +99,11 @@ struct TaskRow : View {
             }
           }
             Spacer()
-            if task.time != nil {
-                if editMode!.wrappedValue.isEditing {
-                    DatePicker("", selection: Binding<Date>(get: {task.time ?? Date()}, set: {task.time = $0}), displayedComponents: .hourAndMinute)
-                        .labelsHidden()
-                } else {
-                    Text(task.timeString)
-                }
+            if editMode!.wrappedValue.isEditing {
+                DatePicker("", selection: $task.time, displayedComponents: .hourAndMinute)
+                    .labelsHidden()
+            } else {
+                Text(task.timeString)
             }
         //TODO: only reschedule notifications if sth has changed
         //How to detect the change && perform action when exiting the edit mode

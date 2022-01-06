@@ -11,18 +11,16 @@ import SwiftUI
 class NotificationManager {
     
     static func rescheduleNotification(task: Task, firesToday: Bool){
-        if let timer = task.timer {
-            print("reschedule notification for " + task.id.uuidString)
-            unregisterNotification(task: task)
-            registerNotification(task: task, firesToday: firesToday)
-        }
+        print("reschedule notification for " + task.id.uuidString)
+        unregisterNotification(task: task)
+        registerNotification(task: task, firesToday: firesToday)
     }
 
     //if firesToday == true, firesAt : today, otherwise firesAt : tomorrow
     static func registerNotification(task: Task, firesToday: Bool){
         var dateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: Date())
-        dateComponents.hour = Calendar.current.component(.hour, from: task.time!)
-        dateComponents.minute = Calendar.current.component(.minute, from: task.time!)
+        dateComponents.hour = Calendar.current.component(.hour, from: task.time)
+        dateComponents.minute = Calendar.current.component(.minute, from: task.time)
         var firesAtdate = Calendar(identifier: .gregorian).date(from: dateComponents)!
         if firesToday == false {
             var oneDay = DateComponents()
@@ -36,7 +34,7 @@ class NotificationManager {
     }
     
     static func unregisterNotification(task: Task){
-        task.timer!.invalidate()
+        task.timer.invalidate()
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [task.id.uuidString])
     }
     
