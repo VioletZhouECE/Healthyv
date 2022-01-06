@@ -52,6 +52,8 @@ class Task: Identifiable, ObservableObject, Equatable {
             }
         }
     }
+    //helps keep track of whether the task has been updated
+    var hasChanged = false
     
     init(name: String, isMedication: Bool, completed: Bool, time: Date){
         self.name = name
@@ -89,6 +91,10 @@ struct TaskRow : View {
             }
             if editMode!.wrappedValue.isEditing {
                 TextField(task.name, text: $task.name)
+                    .onChange(of: task.name, perform: {
+                        value in
+                        task.hasChanged = true
+                    })
           } else {
             if task.completed {
                 Text(task.name)
@@ -102,15 +108,18 @@ struct TaskRow : View {
             if editMode!.wrappedValue.isEditing {
                 DatePicker("", selection: $task.time, displayedComponents: .hourAndMinute)
                     .labelsHidden()
+                    .onChange(of: task.time, perform: {
+                        value in
+                        task.hasChanged = true
+                    })
             } else {
                 Text(task.timeString)
             }
-        //TODO: only reschedule notifications if sth has changed
-        //How to detect the change && perform action when exiting the edit mode
         }.onChange(of: editMode!.wrappedValue, perform: {
             value in
-            if value.isEditing == false {
+            if value.isEditing == false && task.hasChanged {
                 NotificationManager.rescheduleNotification(task: task, firesToday: true)
+                task.hasChanged = false
             }
         })
     }
