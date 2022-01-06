@@ -118,7 +118,11 @@ struct TaskRow : View {
         }.onChange(of: editMode!.wrappedValue, perform: {
             value in
             if value.isEditing == false && task.hasChanged {
-                NotificationManager.rescheduleNotification(task: task, firesToday: true)
+                if task.completed == false {
+                    NotificationManager.rescheduleNotification(task: task, firesToday: true)
+                } else {
+                    NotificationManager.rescheduleNotification(task: task, firesToday: false)
+                }
                 task.hasChanged = false
             }
         })
