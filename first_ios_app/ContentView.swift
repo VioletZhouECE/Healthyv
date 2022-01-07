@@ -106,12 +106,8 @@ struct TaskRow : View {
           }
             Spacer()
             if editMode!.wrappedValue.isEditing {
-                DatePicker("", selection: $task.time, displayedComponents: .hourAndMinute)
+                DatePicker("", selection: Binding<Date>(get: {task.time}, set: {task.time = $0; task.hasChanged = true}), displayedComponents: .hourAndMinute)
                     .labelsHidden()
-                    .onChange(of: task.time, perform: {
-                        value in
-                        task.hasChanged = true
-                    })
             } else {
                 Text(task.timeString)
             }
