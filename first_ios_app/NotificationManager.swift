@@ -22,14 +22,13 @@ class NotificationManager {
         dateComponents.hour = Calendar.current.component(.hour, from: task.time)
         dateComponents.minute = Calendar.current.component(.minute, from: task.time)
         var firesAtdate = Calendar(identifier: .gregorian).date(from: dateComponents)!
-        if firesToday == false {
+        if firesToday == false || task.time < Date(){
             var oneDay = DateComponents()
             oneDay.day = 1
             firesAtdate = Calendar.current.date(byAdding: oneDay, to: firesAtdate)!
         }
         let timer = Timer(fireAt: firesAtdate, interval: 60*60*24, target: self, selector: #selector(runNotificationScheduler), userInfo: task, repeats: true)
         RunLoop.main.add(timer, forMode: .common)
-        //side effect: update the timer associated with the task
         task.timer = timer
     }
     
