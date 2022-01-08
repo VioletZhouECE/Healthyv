@@ -133,7 +133,8 @@ struct TaskRow : View {
 
  struct ContentView: View {
     
-    @StateObject private var tasks = loadTask()
+    @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var tasks = loadTasks()
     @StateObject private var displayed = DisplayedView()
     
     var body: some View {
@@ -199,6 +200,11 @@ struct TaskRow : View {
                 Spacer()
             }.environmentObject(tasks)
             .environmentObject(displayed)
+            .onChange(of: scenePhase) { phase in
+                    if phase == .inactive {
+                        saveTasks()
+                    }
+                }
     }
     
     func deleteMedication(at offsets: IndexSet){
@@ -234,7 +240,7 @@ struct TaskRow : View {
         return taskContainer
     }
     
-    static func loadTask() -> TaskContainer {
+    static func loadTasks() -> TaskContainer {
         let mainContext = CoreDataManager.shared.mainContext
         let fetchRequest: NSFetchRequest<TaskReminder> = TaskReminder.createFetchRequest()
         do {
@@ -244,6 +250,42 @@ struct TaskRow : View {
         catch {
             debugPrint(error)
             return TaskContainer(medications: [], reminders: [])
+        }
+    }
+    
+    func saveTasks() {
+        let context = CoreDataManager.shared.backgroundContext()
+        context.perform {
+            tasks.medications.forEach {
+                task in
+                let entity = TaskReminder.entity()
+                let tr = TaskReminder(entity: entity, insertInto: context)
+                tr.id = task.id
+                tr.name = task.name
+                tr.isMedication = task.isMedication
+                tr.completed = task.completed
+                tr.time = task.time
+                do {
+                    try context.save()
+                } catch {
+                    debugPrint(error)
+                }
+            }
+            tasks.reminders.forEach {
+                task in
+                let entity = TaskReminder.entity()
+                let tr = TaskReminder(entity: entity, insertInto: context)
+                tr.id = task.id
+                tr.name = task.name
+                tr.isMedication = task.isMedication
+                tr.completed = task.completed
+                tr.time = task.time
+                do {
+                    try context.save()
+                } catch {
+                    debugPrint(error)
+                }
+            }
         }
     }
 }
