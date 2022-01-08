@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreData
 
 //create a task, set a timer that fires at <time> everyday
 //schedule a UNIntervalNotification (fires off every 5 min)
@@ -26,10 +27,10 @@ class TaskContainer : ObservableObject {
 }
 
 class Task: Identifiable, ObservableObject, Equatable {
-    let id = UUID()
+    let id : UUID
     @Published var name : String
     let isMedication: Bool
-    @Published var completed: Bool = false
+    @Published var completed: Bool
     //format: HH:mm
     var time: Date
     //time string
@@ -55,7 +56,12 @@ class Task: Identifiable, ObservableObject, Equatable {
     //helps keep track of whether the task has been updated
     var hasChanged = false
     
-    init(name: String, isMedication: Bool, completed: Bool, time: Date){
+    init(id: UUID?=nil, name: String, isMedication: Bool, completed: Bool, time: Date){
+        if let id = id {
+            self.id = id
+        } else {
+            self.id = UUID()
+        }
         self.name = name
         self.isMedication = isMedication
         self.completed = completed
@@ -127,7 +133,7 @@ struct TaskRow : View {
 
  struct ContentView: View {
     
-    @StateObject private var tasks = TaskContainer(medications: [], reminders: [])
+    @StateObject private var tasks = loadTask()
     @StateObject private var displayed = DisplayedView()
     
     var body: some View {
@@ -212,6 +218,34 @@ struct TaskRow : View {
         }
         self.tasks.reminders.remove(atOffsets: offsets)
     }
+    
+    //conversion: [TaskReminder] -> TaskContainer
+    static func decodeTasks(trs: [TaskReminder]) -> TaskContainer {
+        let taskContainer = TaskContainer(medications:[], reminders:[])
+        trs.forEach{
+            tr in
+            let t = Task(id: tr.id, name: tr.name, isMedication: tr.isMedication, completed: tr.completed, time: tr.time)
+            if tr.isMedication {
+                taskContainer.medications.append(t)
+            } else {
+                taskContainer.reminders.append(t)
+            }
+        }
+        return taskContainer
+    }
+    
+    static func loadTask() -> TaskContainer {
+        let mainContext = CoreDataManager.shared.mainContext
+        let fetchRequest: NSFetchRequest<TaskReminder> = TaskReminder.createFetchRequest()
+        do {
+            let results = try mainContext.fetch(fetchRequest)
+            return decodeTasks(trs: results)
+        }
+        catch {
+            debugPrint(error)
+            return TaskContainer(medications: [], reminders: [])
+        }
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {
@@ -226,3 +260,4 @@ struct ContentView_Previews: PreviewProvider {
         }
     }
 }
+
