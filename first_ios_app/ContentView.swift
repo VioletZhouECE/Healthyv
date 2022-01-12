@@ -17,7 +17,7 @@ class DisplayedView : ObservableObject {
 }
 
 class TaskContainer: ObservableObject {
-    @Published @FetchRequest(sortDescriptors: [], fetchRequest: Task.createfetchRequest) var tasks: FetchedResults<Task>
+    @FetchRequest(sortDescriptors: []) var tasks: FetchedResults<Task>
     init(){}
 }
 
@@ -80,7 +80,6 @@ struct TaskRow : View {
 
  struct ContentView: View {
     
-    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.managedObjectContext) var moc
     @StateObject private var tasks = TaskContainer()
     @StateObject private var displayed = DisplayedView()
