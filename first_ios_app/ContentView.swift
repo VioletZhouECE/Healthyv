@@ -16,62 +16,9 @@ class DisplayedView : ObservableObject {
     @Published var showAddReminder = false
 }
 
-class TaskContainer : ObservableObject {
-    @Published var medications = [Task]()
-    @Published var reminders = [Task]()
-    
-    init(medications: [Task], reminders: [Task]){
-        self.medications = medications
-        self.reminders = reminders
-    }
-}
-
-class Task: Identifiable, ObservableObject, Equatable {
-    let id : UUID
-    @Published var name : String
-    let isMedication: Bool
-    @Published var completed: Bool
-    //format: HH:mm
-    var time: Date
-    //time string
-    var timeString: String {
-            get {
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "HH:mm"
-                return dateFormatter.string(from: time)
-            }
-    }
-    //timer that schedules notifications
-    var timer: Timer
-    //reminder body
-    var body: String {
-        get {
-            if isMedication {
-                return name
-            } else {
-                return "Remember to take " + name
-            }
-        }
-    }
-    //helps keep track of whether the task has been updated
-    var hasChanged = false
-    
-    init(id: UUID?=nil, name: String, isMedication: Bool, completed: Bool, time: Date){
-        if let id = id {
-            self.id = id
-        } else {
-            self.id = UUID()
-        }
-        self.name = name
-        self.isMedication = isMedication
-        self.completed = completed
-        self.time = time
-        self.timer = Timer()
-    }
-    
-    static func == (lhs: Task, rhs: Task) -> Bool {
-        return lhs.id == rhs.id && lhs.name == rhs.name && lhs.isMedication == rhs.isMedication && lhs.time == rhs.time
-    }
+class TaskContainer: ObservableObject {
+    @Published @FetchRequest(sortDescriptors: [], fetchRequest: Task.createfetchRequest) var tasks: FetchedResults<Task>
+    init(){}
 }
 
 struct TaskRow : View {
@@ -134,7 +81,8 @@ struct TaskRow : View {
  struct ContentView: View {
     
     @Environment(\.scenePhase) private var scenePhase
-    @StateObject private var tasks = loadTasks()
+    @Environment(\.managedObjectContext) var moc
+    @StateObject private var tasks = TaskContainer()
     @StateObject private var displayed = DisplayedView()
     
     var body: some View {
@@ -164,8 +112,11 @@ struct TaskRow : View {
                             })
                             {
                             List{
-                                ForEach(self.tasks.medications){
-                                    medication in TaskRow(task:medication)
+                                ForEach(self.tasks.tasks){
+                                    task in
+                                    if task.isMedication {
+                                        TaskRow(task:task)
+                                    }
                                 }
                                 .onDelete(perform: deleteMedication)
                             }
@@ -188,8 +139,11 @@ struct TaskRow : View {
                             }
                         }){
                         List{
-                            ForEach(self.tasks.reminders){
-                                reminder in TaskRow(task:reminder)
+                            ForEach(self.tasks.tasks){
+                                task in
+                                if task.isMedication == false {
+                                    TaskRow(task:task)
+                                }
                             }
                             .onDelete(perform: deleteReminder)
                         }
@@ -200,92 +154,21 @@ struct TaskRow : View {
                 Spacer()
             }.environmentObject(tasks)
             .environmentObject(displayed)
-            .onChange(of: scenePhase) { phase in
-                    if phase == .inactive {
-                        saveTasks()
-                    }
-                }
     }
-    
+
     func deleteMedication(at offsets: IndexSet){
-        //remove notifications
         let idxArray = Array(offsets)
         idxArray.forEach {idx in
-            NotificationManager.unregisterNotification(task: self.tasks.medications[idx])
+            NotificationManager.unregisterNotification(task: self.tasks.tasks[idx])
+            moc.delete(tasks.tasks[idx])
         }
-        self.tasks.medications.remove(atOffsets: offsets)
     }
     
     func deleteReminder(at offsets: IndexSet){
-        //remove notifications
         let idxArray = Array(offsets)
         idxArray.forEach {idx in
-            NotificationManager.unregisterNotification(task: self.tasks.reminders[idx])
-        }
-        self.tasks.reminders.remove(atOffsets: offsets)
-    }
-    
-    //conversion: [TaskReminder] -> TaskContainer
-    static func decodeTasks(trs: [TaskReminder]) -> TaskContainer {
-        let taskContainer = TaskContainer(medications:[], reminders:[])
-        trs.forEach{
-            tr in
-            let t = Task(id: tr.id, name: tr.name, isMedication: tr.isMedication, completed: tr.completed, time: tr.time)
-            if tr.isMedication {
-                taskContainer.medications.append(t)
-            } else {
-                taskContainer.reminders.append(t)
-            }
-        }
-        return taskContainer
-    }
-    
-    static func loadTasks() -> TaskContainer {
-        let mainContext = CoreDataManager.shared.mainContext
-        let fetchRequest: NSFetchRequest<TaskReminder> = TaskReminder.createFetchRequest()
-        do {
-            let results = try mainContext.fetch(fetchRequest)
-            return decodeTasks(trs: results)
-        }
-        catch {
-            debugPrint(error)
-            return TaskContainer(medications: [], reminders: [])
-        }
-    }
-    
-    func saveTasks() {
-        let context = CoreDataManager.shared.backgroundContext()
-        context.perform {
-            tasks.medications.forEach {
-                task in
-                let entity = TaskReminder.entity()
-                let tr = TaskReminder(entity: entity, insertInto: context)
-                tr.id = task.id
-                tr.name = task.name
-                tr.isMedication = task.isMedication
-                tr.completed = task.completed
-                tr.time = task.time
-                do {
-                    try context.save()
-                } catch {
-                    debugPrint(error)
-                }
-            }
-            tasks.reminders.forEach {
-                task in
-                let entity = TaskReminder.entity()
-                let tr = TaskReminder(entity: entity, insertInto: context)
-                tr.id = task.id
-                tr.name = task.name
-                tr.isMedication = task.isMedication
-                tr.completed = task.completed
-                tr.time = task.time
-                do {
-                    try context.save()
-                } catch {
-                    debugPrint(error)
-                }
-            }
+            NotificationManager.unregisterNotification(task: self.tasks.tasks[idx])
+            moc.delete(tasks.tasks[idx])
         }
     }
 }

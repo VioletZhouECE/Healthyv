@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 
 struct AddReminderView : View {
+    @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var tasks: TaskContainer
     @EnvironmentObject var displayed : DisplayedView
     @State private var taskName = ""
@@ -74,8 +75,12 @@ struct AddReminderView : View {
     }
     
     func addReminder(){
-        let newTask = Task(name: taskName, isMedication: false, completed: false, time: time)
-        tasks.reminders.append(newTask)
+        let newTask = Task(context:moc)
+        newTask.id = UUID()
+        newTask.name = taskName
+        newTask.isMedication = false
+        newTask.completed = false
+        newTask.time = time
         NotificationManager.registerNotification(task: newTask, firesToday: true)
     }
 }

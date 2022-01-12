@@ -43,7 +43,7 @@ class NotificationManager {
         let task = timer.userInfo as! Task
         if task.completed == false {
             sendNotificationImmediately(title: task.name, body: task.body, identifier: task.id.uuidString)
-            registerTimeIntervalNotification(title: task.name, body: task.body, timeInterval: 60*3, identifier: task.id.uuidString)
+            registerTimeIntervalNotification(title: task.name, body: task.body, timeInterval: 60, identifier: task.id.uuidString)
         }
     }
     

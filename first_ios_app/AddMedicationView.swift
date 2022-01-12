@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 
 struct AddMedicationView : View {
+    @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var tasks: TaskContainer
     @EnvironmentObject var displayed : DisplayedView
     @State private var taskName = ""
@@ -74,8 +75,12 @@ struct AddMedicationView : View {
     }
     
     func addMedication(){
-        let newTask = Task(name: taskName, isMedication: true, completed: false, time: time)
-        tasks.medications.append(newTask)
+        let newTask = Task(context:moc)
+        newTask.id = UUID()
+        newTask.name = taskName
+        newTask.isMedication = true
+        newTask.completed = false
+        newTask.time = time
         NotificationManager.registerNotification(task: newTask, firesToday: true)
     }
 }

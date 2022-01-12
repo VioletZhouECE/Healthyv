@@ -8,22 +8,37 @@
 import Foundation
 import CoreData
 
-class CoreDataManager {
-    static let shared = CoreDataManager()
-    private init() {}
-    private lazy var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "Healthyv")
-        container.loadPersistentStores(completionHandler: { _, error in
-            _ = error.map { fatalError("Unresolved error \($0)") }
-        })
-        return container
-    }()
-    
-    var mainContext: NSManagedObjectContext {
-        return persistentContainer.viewContext
+struct PersistenceController {
+    // A singleton for our entire app to use
+    static let shared = PersistenceController()
+
+    // Storage for Core Data
+    let container: NSPersistentContainer
+
+    // An initializer to load Core Data, optionally able
+    // to use an in-memory store.
+    init() {
+        // If you didn't name your model Main you'll need
+        // to change this name below.
+        container = NSPersistentContainer(name: "Task")
+
+        container.loadPersistentStores { description, error in
+            if let error = error {
+                fatalError("Error: \(error.localizedDescription)")
+            }
+        }
     }
     
-    func backgroundContext() -> NSManagedObjectContext {
-        return persistentContainer.newBackgroundContext()
+    func save() {
+        let context = container.viewContext
+
+        if context.hasChanges {
+            do {
+                try context.save()
+            } catch {
+                // Show some error here
+            }
+        }
     }
 }
+

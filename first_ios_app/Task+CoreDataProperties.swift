@@ -10,10 +10,10 @@ import Foundation
 import CoreData
 
 
-extension TaskReminder {
+extension Task {
 
-    @nonobjc public class func createFetchRequest() -> NSFetchRequest<TaskReminder> {
-        return NSFetchRequest<TaskReminder>(entityName: "TaskReminder")
+    @nonobjc public class func createfetchRequest() -> NSFetchRequest<Task> {
+        return NSFetchRequest<Task>(entityName: "Task")
     }
 
     @NSManaged public var id: UUID
@@ -21,9 +21,8 @@ extension TaskReminder {
     @NSManaged public var isMedication: Bool
     @NSManaged public var completed: Bool
     @NSManaged public var time: Date
-
 }
 
-extension TaskReminder : Identifiable {
+extension Task : Identifiable {
 
 }
