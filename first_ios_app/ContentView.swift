@@ -158,8 +158,8 @@ struct TaskRow : View {
         idxArray.forEach {idx in
             NotificationManager.unregisterNotification(task: self.tasks[idx])
             moc.delete(tasks[idx])
-            try? moc.save()
         }
+        //try? moc.save()
     }
     
     func deleteReminder(at offsets: IndexSet){
@@ -167,8 +167,8 @@ struct TaskRow : View {
         idxArray.forEach {idx in
             NotificationManager.unregisterNotification(task: self.tasks[idx])
             moc.delete(tasks[idx])
-            try? moc.save()
         }
+        //try? moc.save()
     }
 }
 
