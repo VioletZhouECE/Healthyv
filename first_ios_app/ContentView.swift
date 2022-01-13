@@ -16,11 +16,6 @@ class DisplayedView : ObservableObject {
     @Published var showAddReminder = false
 }
 
-class TaskContainer: ObservableObject {
-    @FetchRequest(sortDescriptors: []) var tasks: FetchedResults<Task>
-    init(){}
-}
-
 struct TaskRow : View {
     @EnvironmentObject var displayed: DisplayedView
     @Environment(\.editMode) var editMode
@@ -81,7 +76,7 @@ struct TaskRow : View {
  struct ContentView: View {
     
     @Environment(\.managedObjectContext) var moc
-    @StateObject private var tasks = TaskContainer()
+    @FetchRequest(sortDescriptors: []) var tasks: FetchedResults<Task>
     @StateObject private var displayed = DisplayedView()
     
     var body: some View {
@@ -111,7 +106,7 @@ struct TaskRow : View {
                             })
                             {
                             List{
-                                ForEach(self.tasks.tasks){
+                                ForEach(self.tasks){
                                     task in
                                     if task.isMedication {
                                         TaskRow(task:task)
@@ -138,7 +133,7 @@ struct TaskRow : View {
                             }
                         }){
                         List{
-                            ForEach(self.tasks.tasks){
+                            ForEach(self.tasks){
                                 task in
                                 if task.isMedication == false {
                                     TaskRow(task:task)
@@ -151,23 +146,22 @@ struct TaskRow : View {
                 }
                 .padding(.all)
                 Spacer()
-            }.environmentObject(tasks)
-            .environmentObject(displayed)
+            }.environmentObject(displayed)
     }
 
     func deleteMedication(at offsets: IndexSet){
         let idxArray = Array(offsets)
         idxArray.forEach {idx in
-            NotificationManager.unregisterNotification(task: self.tasks.tasks[idx])
-            moc.delete(tasks.tasks[idx])
+            NotificationManager.unregisterNotification(task: self.tasks[idx])
+            moc.delete(tasks[idx])
         }
     }
     
     func deleteReminder(at offsets: IndexSet){
         let idxArray = Array(offsets)
         idxArray.forEach {idx in
-            NotificationManager.unregisterNotification(task: self.tasks.tasks[idx])
-            moc.delete(tasks.tasks[idx])
+            NotificationManager.unregisterNotification(task: self.tasks[idx])
+            moc.delete(tasks[idx])
         }
     }
 }

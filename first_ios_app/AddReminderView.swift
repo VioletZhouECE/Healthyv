@@ -10,7 +10,6 @@ import SwiftUI
 
 struct AddReminderView : View {
     @Environment(\.managedObjectContext) var moc
-    @EnvironmentObject var tasks: TaskContainer
     @EnvironmentObject var displayed : DisplayedView
     @State private var taskName = ""
     @State private var time = Date()
