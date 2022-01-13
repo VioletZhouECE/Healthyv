@@ -18,6 +18,7 @@ class DisplayedView : ObservableObject {
 
 struct TaskRow : View {
     @EnvironmentObject var displayed: DisplayedView
+    @Environment(\.managedObjectContext) var moc
     @Environment(\.editMode) var editMode
     @ObservedObject var task: Task
     
@@ -61,6 +62,9 @@ struct TaskRow : View {
             }
         }.onChange(of: editMode!.wrappedValue, perform: {
             value in
+            if value.isEditing == false {
+                try? moc.save()
+            }
             if value.isEditing == false && task.hasChanged {
                 if task.completed == false {
                     NotificationManager.rescheduleNotification(task: task, firesToday: true)
@@ -154,6 +158,7 @@ struct TaskRow : View {
         idxArray.forEach {idx in
             NotificationManager.unregisterNotification(task: self.tasks[idx])
             moc.delete(tasks[idx])
+            try? moc.save()
         }
     }
     
@@ -162,6 +167,7 @@ struct TaskRow : View {
         idxArray.forEach {idx in
             NotificationManager.unregisterNotification(task: self.tasks[idx])
             moc.delete(tasks[idx])
+            try? moc.save()
         }
     }
 }

@@ -80,6 +80,7 @@ struct AddMedicationView : View {
         newTask.isMedication = true
         newTask.completed = false
         newTask.time = time
+        try? moc.save()
         NotificationManager.registerNotification(task: newTask, firesToday: true)
     }
 }
