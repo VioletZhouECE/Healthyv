@@ -16,7 +16,7 @@ public class Task: NSManagedObject {
             get {
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "HH:mm"
-                return dateFormatter.string(from: time)
+                return dateFormatter.string(from: time ?? Date())
             }
     }
     //timer that schedules notifications

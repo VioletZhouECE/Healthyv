@@ -15,7 +15,6 @@ struct first_ios_appApp: App {
     let persistenceController = PersistenceController.shared
     
     init(){
-        NotificationManager.removeAllPendingNotification()
         NotificationManager.setNotifications()
     }
     var body: some Scene {

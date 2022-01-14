@@ -80,7 +80,7 @@ struct TaskRow : View {
  struct ContentView: View {
     
     @Environment(\.managedObjectContext) var moc
-    @FetchRequest(sortDescriptors: []) var tasks: FetchedResults<Task>
+    @FetchRequest(sortDescriptors: []) private var tasks: FetchedResults<Task>
     @StateObject private var displayed = DisplayedView()
     
     var body: some View {
